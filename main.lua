@@ -14,8 +14,10 @@ local ballRadius = 10
 playerOneScore = 0
 playerTwoScore = 0
 
+--game timer
 gameTimer = 350
 
+-- speed given to the players bats
 playBatSpeed = 100
 
 -- sizeing of the game area
