@@ -3,7 +3,7 @@ playOnesTurn = true
 playerTwosTurn = false
 
 -- Initialize sound
-sound = love.audio.newSource("/retro-gaming-271301.mp3", "stream") 
+sound = love.audio.newSource("/retro-gaming-271301.mp3", "stream")
 
 -- Ball position and size
 local ballX = math.min(50, love.graphics.getWidth() - 50)
@@ -11,8 +11,8 @@ local ballY = math.min(50, love.graphics.getHeight() - 50)
 
 local ballRadius = 10
 
-playerOneScore = 0
-playerTwoScore = 0
+local playerOneScore = 0
+local playerTwoScore = 0
 
 --game timer
 gameTimer = 350
@@ -21,28 +21,66 @@ gameTimer = 350
 playBatSpeed = 100
 
 -- sizeing of the game area
-local courtX= 10
-local courtY = 30 
-local courtWidth= (720-30)
-local courtHeight  = (1280-30)
+local courtX = 10
+local courtY = 30
+local courtWidth = (720 - 30)
+local courtHeight = (1280 - 30)
 
 -- creating bat parameters
-local playerOneBatX,playerOneBaty = 10,250
-local playerTwoBatX,playerTwoBaty = courtHeight,250
+local playerOneBatX, playerOneBaty = 10, 250
+local playerTwoBatX, playerTwoBaty = courtHeight, 250
 local batSizeWidth = 10
 local batSizeHeight = 50
 
 -- Track whether music is playing
 isPlaying = true
 
+-- attempting to create a menu for my pong game:
+
+BUTTON_HEIGHT = 64
+
+local buttons = {}
+
+function newButton(text, fn)
+    return {
+        text = text,
+        fn = fn
+    }
+end
+
 function love.load()
     -- changing the font
-    gameFont = love.graphics.newFont(25)
+    font = love.graphics.newFont(25)
 
     -- Play the game sound on load
-    love.audio.play(sound) 
+    love.audio.play(sound)
 
     background = love.graphics.newImage("troll.jpeg")
+
+    -- trying to load in my buttons:
+    table.insert(buttons, newButton(
+        "start game",
+        function()
+            print("Starting game")
+        end))
+
+    table.insert(buttons, newButton(
+        "Load game",
+        function()
+            print("Loading game")
+        end))
+
+    table.insert(buttons, newButton(
+        "Settings",
+        function()
+            print("going to settings menu")
+        end))
+
+    table.insert(buttons, newButton(
+        "exit",
+        function()
+            love.event.quit(0)
+        end))
 end
 
 function love.update(dt)
@@ -56,6 +94,8 @@ function love.update(dt)
 end
 
 function love.draw()
+    love.graphics.setColor(1, 1, 1) -- Set color to white
+
     love.graphics.rectangle("fill", playerOneBatX, playerOneBaty, batSizeWidth, batSizeHeight)
     love.graphics.rectangle("fill", playerTwoBatX, playerTwoBaty, batSizeWidth, batSizeHeight)
     love.graphics.rectangle("line", courtX, courtY, courtHeight, courtWidth)
@@ -74,8 +114,8 @@ function love.draw()
         love.graphics.printf("Game Over!", 0, love.graphics.getHeight() / 2 - 50, love.graphics.getWidth(), "center")
     end
 
-      -- player one movement:
-      if love.keyboard.isDown("w") then
+    -- player one movement:
+    if love.keyboard.isDown("w") then
         playerOneBaty = playerOneBaty - 10
     end
 
@@ -90,8 +130,6 @@ function love.draw()
     if love.keyboard.isDown("a") then
         playerOneBatX = playerOneBatX - 10
     end
-
-
 
     -- player two movement:
     if love.keyboard.isDown("up") then
@@ -111,12 +149,44 @@ function love.draw()
     end
 
     -- Player 1's paddle
-     playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
+    playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
 
-     -- Player 2's paddle
-     playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
- 
-    
+    -- Player 2's paddle
+    playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
+
+    -- Drawing buttons
+    local ww = love.graphics.getWidth()
+    local wh = love.graphics.getHeight()
+    local button_width = ww * 0.3
+    local margin = 16
+    local cursor_y = 0
+
+    local total_height = (BUTTON_HEIGHT + margin) * #buttons
+    for i, button in ipairs(buttons) do
+        local bx = (ww * 0.5) - (button_width * 0.5)
+        local by = (wh * 0.5) - (BUTTON_HEIGHT * 0.5) - (total_height * 0.5) + cursor_y
+
+        local color = 
+
+        love.graphics.rectangle("fill", bx, by, button_width, BUTTON_HEIGHT)
+
+        local textW = font:getWidth(button.text)
+        local textH = font:getHeight(button.text)
+
+        love.graphics.setColor(1, 0, 0) -- Set color to red for text
+        love.graphics.printf(
+            button.text,
+            font,
+            bx,
+            by + (BUTTON_HEIGHT - textH) / 2,
+            button_width,
+            "center"
+        )
+
+        love.graphics.setColor(1, 1, 1) -- Set color back to white for next button background
+
+        cursor_y = cursor_y + (BUTTON_HEIGHT + margin)
+    end
 end
 
 function love.keypressed(key)
