@@ -99,6 +99,46 @@ function love.update(dt)
         -- ballX = math.max(courtX + ballRadius, math.min(ballX, courtX + courtWidth - ballRadius)) -- logic for the left/right of the court 
         ballY = math.max(courtY + ballRadius, math.min(ballY, courtY + courtHeight - ballRadius))  -- logic for the top/bottom of the court 
 
+        -- player one and two movement
+        if love.keyboard.isDown("w") then
+            playerOneBaty = playerOneBaty - 10
+        end
+
+        if love.keyboard.isDown("s") then
+            playerOneBaty = playerOneBaty + 10
+        end
+
+        if love.keyboard.isDown("d") then
+            playerOneBatX = playerOneBatX + 10
+        end
+
+        if love.keyboard.isDown("a") then
+            playerOneBatX = playerOneBatX - 10
+        end
+
+        if love.keyboard.isDown("up") then
+            playerTwoBaty = playerTwoBaty - 10
+        end
+
+        if love.keyboard.isDown("down") then
+            playerTwoBaty = playerTwoBaty + 10
+        end
+
+        if love.keyboard.isDown("left") then
+            playerTwoBatX = playerTwoBatX - 10
+        end
+
+        if love.keyboard.isDown("right") then
+            playerTwoBatX = playerTwoBatX + 10
+        end
+
+        -- logic to make sure that the player bats cant leave the area of play.
+        playerOneBatX = math.max(courtX, math.min(playerOneBatX, courtX + courtWidth - batSizeWidth))
+        playerTwoBatX = math.max(courtX, math.min(playerTwoBatX, courtX + courtWidth - batSizeWidth))
+
+        playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
+        playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
+
     end
 end
 
@@ -183,44 +223,6 @@ function love.draw()
             love.graphics.printf("Game Over!", 0, love.graphics.getHeight() / 2 - 50, love.graphics.getWidth(), "center")
         end
 
-        if love.keyboard.isDown("w") then
-            playerOneBaty = playerOneBaty - 10
-        end
-
-        if love.keyboard.isDown("s") then
-            playerOneBaty = playerOneBaty + 10
-        end
-
-        if love.keyboard.isDown("d") then
-            playerOneBatX = playerOneBatX + 10
-        end
-
-        if love.keyboard.isDown("a") then
-            playerOneBatX = playerOneBatX - 10
-        end
-
-        if love.keyboard.isDown("up") then
-            playerTwoBaty = playerTwoBaty - 10
-        end
-
-        if love.keyboard.isDown("down") then
-            playerTwoBaty = playerTwoBaty + 10
-        end
-
-        if love.keyboard.isDown("left") then
-            playerTwoBatX = playerTwoBatX - 10
-        end
-
-        if love.keyboard.isDown("right") then
-            playerTwoBatX = playerTwoBatX + 10
-        end
-
-        -- logic to make sure that the player bats cant leave the area of play.
-        playerOneBatX = math.max(courtX, math.min(playerOneBatX, courtX + courtWidth - batSizeWidth))
-        playerTwoBatX = math.max(courtX, math.min(playerTwoBatX, courtX + courtWidth - batSizeWidth))
-
-        playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
-        playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
     end
 end
 
