@@ -1,4 +1,4 @@
--- initializing whos turn it is for when the ball hits the bat to determine who gets the point 
+-- Initializing which player's turn it is for when the ball hits the bat to determine who gets the point 
 playOnesTurn = true
 playerTwosTurn = false
 
@@ -14,19 +14,19 @@ local ballRadius = 10
 local playerOneScore = 0
 local playerTwoScore = 0
 
---game timer
+-- Game timer
 gameTimer = 350
 
--- speed given to the players bats
+-- Speed for player paddles
 playBatSpeed = 100
 
--- sizeing of the game area
+-- Game area size
 local courtX = 10
 local courtY = 30
 local courtWidth = (720 - 30)
 local courtHeight = (1280 - 30)
 
--- creating bat parameters
+-- Player bat position and size
 local playerOneBatX, playerOneBaty = 10, 250
 local playerTwoBatX, playerTwoBaty = courtHeight, 250
 local batSizeWidth = 10
@@ -35,33 +35,37 @@ local batSizeHeight = 50
 -- Track whether music is playing
 isPlaying = true
 
--- attempting to create a menu for my pong game:
-
+-- Menu button settings
 BUTTON_HEIGHT = 64
 
 local buttons = {}
+local gameState = "menu"  -- Values: "menu", "game"
 
 function newButton(text, fn)
     return {
         text = text,
-        fn = fn
+        fn = fn,
+        now = false,
+        last = false
     }
 end
 
 function love.load()
-    -- changing the font
+    -- Start with the menu screen
+    gameState = "menu" 
+
+    -- Set font for text
     font = love.graphics.newFont(25)
 
-    -- Play the game sound on load
+    -- Play music on load
     love.audio.play(sound)
 
-    background = love.graphics.newImage("troll.jpeg")
-
-    -- trying to load in my buttons:
+    -- Set up buttons for the menu
     table.insert(buttons, newButton(
         "start game",
         function()
             print("Starting game")
+            gameState = "game"  -- Change to game state when clicked
         end))
 
     table.insert(buttons, newButton(
@@ -84,108 +88,136 @@ function love.load()
 end
 
 function love.update(dt)
-    -- Decrease the timer
-    gameTimer = gameTimer - dt
-    if gameTimer <= 0 then
-        gameTimer = 0
-    end
+    if gameState == "game" then
+        -- Decrease timer
+        gameTimer = gameTimer - dt
+        if gameTimer <= 0 then
+            gameTimer = 0
+        end
 
-    ballX = ballX + playBatSpeed * dt -- Moves the ball to the right over time (dt - distance over time )
+        -- Move ball over time
+        ballX = ballX + playBatSpeed * dt
+    end
 end
 
 function love.draw()
-    love.graphics.setColor(1, 1, 1) -- Set color to white
+    if gameState == "menu" then
+        -- Draw the menu
+        love.graphics.setColor(1, 1, 1) -- Set color to white for the menu
 
-    love.graphics.rectangle("fill", playerOneBatX, playerOneBaty, batSizeWidth, batSizeHeight)
-    love.graphics.rectangle("fill", playerTwoBatX, playerTwoBaty, batSizeWidth, batSizeHeight)
-    love.graphics.rectangle("line", courtX, courtY, courtHeight, courtWidth)
+        -- Draw buttons
+        local ww = love.graphics.getWidth()
+        local wh = love.graphics.getHeight()
+        local button_width = ww * 0.3
+        local margin = 16
+        local cursor_y = 0
 
-    -- Draw the game ball
-    love.graphics.circle("fill", ballX, ballY, ballRadius)
+        local total_height = (BUTTON_HEIGHT + margin) * #buttons
+        for i, button in ipairs(buttons) do
+            button.last = button.now
 
-    -- Draw player scores and the timer
-    love.graphics.print("Player One Score: " .. playerOneScore, courtY, 10)
-    love.graphics.print("Player Two Score: " .. playerTwoScore, courtX + courtHeight - 150, 10)
-    love.graphics.print("Game - Timer: " .. math.ceil(gameTimer), (love.graphics.getWidth()) / 2, 10)
+            local bx = (ww * 0.5) - (button_width * 0.5)
+            local by = (wh * 0.5) - (BUTTON_HEIGHT * 0.5) - (total_height * 0.5) + cursor_y
 
-    -- Game over condition
-    if gameTimer == 0 or playerOneScore == 10 or playerTwoScore == 10 then
-        love.graphics.setColor(1, 1, 0)
-        love.graphics.printf("Game Over!", 0, love.graphics.getHeight() / 2 - 50, love.graphics.getWidth(), "center")
-    end
+            local color = {0.4, 0.4, 0.5, 1.0}
 
-    -- player one movement:
-    if love.keyboard.isDown("w") then
-        playerOneBaty = playerOneBaty - 10
-    end
+            local mx, my = love.mouse.getPosition()
 
-    if love.keyboard.isDown("s") then
-        playerOneBaty = playerOneBaty + 10
-    end
+            local hot = mx > bx and mx < bx + button_width and
+                        my > by and my < by + BUTTON_HEIGHT
 
-    if love.keyboard.isDown("d") then
-        playerOneBatX = playerOneBatX + 10
-    end
+            if hot then
+                color = {0.8, 0.8, 1.0, 2.0}
+            end
 
-    if love.keyboard.isDown("a") then
-        playerOneBatX = playerOneBatX - 10
-    end
+            button.now = love.mouse.isDown(1) -- Left click
+            if button.now and not button.last and hot then
+                button.fn()
+            end
 
-    -- player two movement:
-    if love.keyboard.isDown("up") then
-        playerTwoBaty = playerTwoBaty - 10
-    end
+            love.graphics.setColor(unpack(color))
+            love.graphics.rectangle("fill",
+                bx,
+                by,
+                button_width,
+                BUTTON_HEIGHT)
 
-    if love.keyboard.isDown("down") then
-        playerTwoBaty = playerTwoBaty + 10
-    end
+            local textW = font:getWidth(button.text)
+            local textH = font:getHeight(button.text)
 
-    if love.keyboard.isDown("left") then
-        playerTwoBatX = playerTwoBatX - 10
-    end
+            love.graphics.setColor(1, 0, 0) -- Set text color to red
+            love.graphics.printf(
+                button.text,
+                font,
+                bx,
+                by + (BUTTON_HEIGHT - textH) / 2,
+                button_width,
+                "center"
+            )
 
-    if love.keyboard.isDown("right") then
-        playerTwoBatX = playerTwoBatX + 10
-    end
+            love.graphics.setColor(1, 1, 1) -- Reset color for the next button
 
-    -- Player 1's paddle
-    playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
+            cursor_y = cursor_y + (BUTTON_HEIGHT + margin)
+        end
+    elseif gameState == "game" then
+        -- Game screen
+        love.graphics.setColor(1, 1, 1)
 
-    -- Player 2's paddle
-    playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
+        -- Draw paddles and ball
+        love.graphics.rectangle("fill", playerOneBatX, playerOneBaty, batSizeWidth, batSizeHeight)
+        love.graphics.rectangle("fill", playerTwoBatX, playerTwoBaty, batSizeWidth, batSizeHeight)
+        love.graphics.rectangle("line", courtX, courtY, courtHeight, courtWidth)
 
-    -- Drawing buttons
-    local ww = love.graphics.getWidth()
-    local wh = love.graphics.getHeight()
-    local button_width = ww * 0.3
-    local margin = 16
-    local cursor_y = 0
+        love.graphics.circle("fill", ballX, ballY, ballRadius)
 
-    local total_height = (BUTTON_HEIGHT + margin) * #buttons
-    for i, button in ipairs(buttons) do
-        local bx = (ww * 0.5) - (button_width * 0.5)
-        local by = (wh * 0.5) - (BUTTON_HEIGHT * 0.5) - (total_height * 0.5) + cursor_y
+        -- Draw scores and timer
+        love.graphics.print("Player One Score: " .. playerOneScore, courtY, 10)
+        love.graphics.print("Player Two Score: " .. playerTwoScore, courtX + courtHeight - 150, 10)
+        love.graphics.print("Game Timer: " .. math.ceil(gameTimer), (love.graphics.getWidth()) / 2, 10)
 
-        local color = 
+        -- Game over condition
+        if gameTimer == 0 or playerOneScore == 10 or playerTwoScore == 10 then
+            love.graphics.setColor(1, 1, 0)
+            love.graphics.printf("Game Over!", 0, love.graphics.getHeight() / 2 - 50, love.graphics.getWidth(), "center")
+        end
 
-        love.graphics.rectangle("fill", bx, by, button_width, BUTTON_HEIGHT)
+        -- Player 1 movement
+        if love.keyboard.isDown("w") then
+            playerOneBaty = playerOneBaty - 10
+        end
 
-        local textW = font:getWidth(button.text)
-        local textH = font:getHeight(button.text)
+        if love.keyboard.isDown("s") then
+            playerOneBaty = playerOneBaty + 10
+        end
 
-        love.graphics.setColor(1, 0, 0) -- Set color to red for text
-        love.graphics.printf(
-            button.text,
-            font,
-            bx,
-            by + (BUTTON_HEIGHT - textH) / 2,
-            button_width,
-            "center"
-        )
+        if love.keyboard.isDown("d") then
+            playerOneBatX = playerOneBatX + 10
+        end
 
-        love.graphics.setColor(1, 1, 1) -- Set color back to white for next button background
+        if love.keyboard.isDown("a") then
+            playerOneBatX = playerOneBatX - 10
+        end
 
-        cursor_y = cursor_y + (BUTTON_HEIGHT + margin)
+        -- Player 2 movement
+        if love.keyboard.isDown("up") then
+            playerTwoBaty = playerTwoBaty - 10
+        end
+
+        if love.keyboard.isDown("down") then
+            playerTwoBaty = playerTwoBaty + 10
+        end
+
+        if love.keyboard.isDown("left") then
+            playerTwoBatX = playerTwoBatX - 10
+        end
+
+        if love.keyboard.isDown("right") then
+            playerTwoBatX = playerTwoBatX + 10
+        end
+
+        -- Prevent paddles from going out of bounds
+        playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
+        playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
     end
 end
 
