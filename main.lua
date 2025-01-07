@@ -1,14 +1,14 @@
--- Initializing which player's turn it is for when the ball hits the bat to determine who gets the point 
+-- Initializing which player's turn it is for when the ball hits the bat to determine who gets the point
 playOnesTurn = true
 playerTwosTurn = false
 
--- Initialize sound
-sound = love.audio.newSource("/retro-gaming-271301.mp3", "stream")
+-- Initialize sounds
+menuSound = love.audio.newSource("/retro-gaming-271301.mp3", "stream")
+gameSound = love.audio.newSource("/gaming-music-8-bit-console-play-background-intro-theme-278382.mp3", "stream")
 
 -- Ball position and size
 local ballX = math.min(50, love.graphics.getWidth() - 50)
 local ballY = math.min(50, love.graphics.getHeight() - 50)
-
 local ballRadius = 10
 
 local playerOneScore = 0
@@ -23,12 +23,15 @@ playBatSpeed = 100
 -- Game area size
 local courtX = 10
 local courtY = 30
-local courtWidth = (720 - 30)
-local courtHeight = (1280 - 30)
+local courtWidth = (1280 - 30) -- Corrected: Horizontal dimension
+local courtHeight = (720 - 30) -- Corrected: Vertical dimension
+
+-- Mid court line / halfway line
+local midCourtLine = (courtWidth / 2) 
 
 -- Player bat position and size
 local playerOneBatX, playerOneBaty = 10, 250
-local playerTwoBatX, playerTwoBaty = courtHeight, 250
+local playerTwoBatX, playerTwoBaty = courtWidth, 250 
 local batSizeWidth = 10
 local batSizeHeight = 50
 
@@ -39,7 +42,7 @@ isPlaying = true
 BUTTON_HEIGHT = 64
 
 local buttons = {}
-local gameState = "menu"  -- Values: "menu", "game"
+local gameState = "menu" -- Values: "menu", "game"
 
 function newButton(text, fn)
     return {
@@ -51,21 +54,17 @@ function newButton(text, fn)
 end
 
 function love.load()
-    -- Start with the menu screen
-    gameState = "menu" 
-
-    -- Set font for text
+    gameState = "menu"
     font = love.graphics.newFont(25)
+    love.audio.play(menuSound)
 
-    -- Play music on load
-    love.audio.play(sound)
-
-    -- Set up buttons for the menu
     table.insert(buttons, newButton(
         "start game",
         function()
             print("Starting game")
-            gameState = "game"  -- Change to game state when clicked
+            gameState = "game"
+            love.audio.stop()
+            love.audio.play(gameSound)
         end))
 
     table.insert(buttons, newButton(
@@ -89,23 +88,19 @@ end
 
 function love.update(dt)
     if gameState == "game" then
-        -- Decrease timer
         gameTimer = gameTimer - dt
         if gameTimer <= 0 then
             gameTimer = 0
         end
 
-        -- Move ball over time
         ballX = ballX + playBatSpeed * dt
     end
 end
 
 function love.draw()
     if gameState == "menu" then
-        -- Draw the menu
-        love.graphics.setColor(1, 1, 1) -- Set color to white for the menu
+        love.graphics.setColor(1, 1, 1)
 
-        -- Draw buttons
         local ww = love.graphics.getWidth()
         local wh = love.graphics.getHeight()
         local button_width = ww * 0.3
@@ -130,7 +125,8 @@ function love.draw()
                 color = {0.8, 0.8, 1.0, 2.0}
             end
 
-            button.now = love.mouse.isDown(1) -- Left click
+            button.now = love.mouse.isDown(1)
+
             if button.now and not button.last and hot then
                 button.fn()
             end
@@ -145,7 +141,7 @@ function love.draw()
             local textW = font:getWidth(button.text)
             local textH = font:getHeight(button.text)
 
-            love.graphics.setColor(1, 0, 0) -- Set text color to red
+            love.graphics.setColor(1, 0, 0)
             love.graphics.printf(
                 button.text,
                 font,
@@ -155,33 +151,33 @@ function love.draw()
                 "center"
             )
 
-            love.graphics.setColor(1, 1, 1) -- Reset color for the next button
+            love.graphics.setColor(1, 1, 1)
 
             cursor_y = cursor_y + (BUTTON_HEIGHT + margin)
         end
+
+
     elseif gameState == "game" then
-        -- Game screen
         love.graphics.setColor(1, 1, 1)
 
-        -- Draw paddles and ball
         love.graphics.rectangle("fill", playerOneBatX, playerOneBaty, batSizeWidth, batSizeHeight)
         love.graphics.rectangle("fill", playerTwoBatX, playerTwoBaty, batSizeWidth, batSizeHeight)
-        love.graphics.rectangle("line", courtX, courtY, courtHeight, courtWidth)
-
         love.graphics.circle("fill", ballX, ballY, ballRadius)
 
-        -- Draw scores and timer
+        love.graphics.rectangle("line", courtX, courtY, courtWidth, courtHeight)
+
+        local midX = courtX + courtWidth / 2
+        love.graphics.line(midX, courtY, midX, courtY + courtHeight)
+
         love.graphics.print("Player One Score: " .. playerOneScore, courtY, 10)
-        love.graphics.print("Player Two Score: " .. playerTwoScore, courtX + courtHeight - 150, 10)
+        love.graphics.print("Player Two Score: " .. playerTwoScore, courtX + courtWidth - 150, 10)
         love.graphics.print("Game Timer: " .. math.ceil(gameTimer), (love.graphics.getWidth()) / 2, 10)
 
-        -- Game over condition
         if gameTimer == 0 or playerOneScore == 10 or playerTwoScore == 10 then
             love.graphics.setColor(1, 1, 0)
             love.graphics.printf("Game Over!", 0, love.graphics.getHeight() / 2 - 50, love.graphics.getWidth(), "center")
         end
 
-        -- Player 1 movement
         if love.keyboard.isDown("w") then
             playerOneBaty = playerOneBaty - 10
         end
@@ -198,7 +194,6 @@ function love.draw()
             playerOneBatX = playerOneBatX - 10
         end
 
-        -- Player 2 movement
         if love.keyboard.isDown("up") then
             playerTwoBaty = playerTwoBaty - 10
         end
@@ -215,19 +210,25 @@ function love.draw()
             playerTwoBatX = playerTwoBatX + 10
         end
 
-        -- Prevent paddles from going out of bounds
+        -- logic to make sure that the player bats cant leave the area of play.
+        playerOneBatX = math.max(courtX, math.min(playerOneBatX, courtX + courtWidth - batSizeWidth))
+        playerTwoBatX = math.max(courtX, math.min(playerTwoBatX, courtX + courtWidth - batSizeWidth))
+
         playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
         playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
+
+        -- logic to make sure the ball cant leave the area of play as well as scoring system.
+
     end
 end
 
 function love.keypressed(key)
     if key == "space" then
         if isPlaying then
-            love.audio.pause(sound) -- Pause the music
+            love.audio.pause()
         else
-            love.audio.play(sound) -- Play the music
+            love.audio.play()
         end
-        isPlaying = not isPlaying -- Toggle the state
+        isPlaying = not isPlaying
     end
 end
