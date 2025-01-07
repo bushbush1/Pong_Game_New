@@ -94,6 +94,11 @@ function love.update(dt)
         end
 
         ballX = ballX + playBatSpeed * dt
+
+        -- logic to make sure the ball can't leave the area of play
+        -- ballX = math.max(courtX + ballRadius, math.min(ballX, courtX + courtWidth - ballRadius)) -- logic for the left/right of the court 
+        ballY = math.max(courtY + ballRadius, math.min(ballY, courtY + courtHeight - ballRadius))  -- logic for the top/bottom of the court 
+
     end
 end
 
@@ -216,9 +221,6 @@ function love.draw()
 
         playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
         playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
-
-        -- logic to make sure the ball cant leave the area of play as well as scoring system.
-
     end
 end
 
