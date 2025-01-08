@@ -19,6 +19,7 @@ gameTimer = 350
 
 -- Speed for player paddles
 playBatSpeed = 100
+maxBallSpeed = 500
 
 -- Game area size
 local courtX = 10
@@ -58,6 +59,9 @@ function love.load()
     font = love.graphics.newFont(25)
     love.audio.play(menuSound)
 
+    ballSpeedX = 200
+    ballSpeedY = 200
+
     table.insert(buttons, newButton(
         "start game",
         function()
@@ -86,6 +90,32 @@ function love.load()
         end))
 end
 
+-- Function to change ball speed after a collision
+function changeBallSpeed(ballSpeedX, ballSpeedY, playerID)
+    -- Reverse the X speed (bounce effect)
+    ballSpeedX = -ballSpeedX
+    ballSpeedY = - ballSpeedY
+
+    -- Apply different speed modifiers based on player
+    if playerID == 1 then
+        ballSpeedX = ballSpeedX * 1.1  -- Player One gets a 10% speed increase
+    elseif playerID == 2 then
+        ballSpeedX = ballSpeedX * 1.2  -- Player Two gets a 20% speed increase
+    end
+
+    -- Optionally increase Y speed by 10%
+    ballSpeedY = ballSpeedY * 1.1
+
+    -- Apply max speed limits
+    if ballSpeedX > maxBallSpeed then
+        ballSpeedX = maxBallSpeed
+    elseif ballSpeedX < -maxBallSpeed then
+        ballSpeedX = -maxBallSpeed
+    end
+
+    return ballSpeedX, ballSpeedY
+end
+
 function love.update(dt)
     if gameState == "game" then
         gameTimer = gameTimer - dt
@@ -93,13 +123,31 @@ function love.update(dt)
             gameTimer = 0
         end
 
-        ballX = ballX + playBatSpeed * dt
+        -- Update ball position
+        ballX = ballX + ballSpeedX * dt
+        ballY = ballY + ballSpeedY * dt
 
         -- logic to make sure the ball can't leave the area of play
-        -- ballX = math.max(courtX + ballRadius, math.min(ballX, courtX + courtWidth - ballRadius)) -- logic for the left/right of the court 
-        ballY = math.max(courtY + ballRadius, math.min(ballY, courtY + courtHeight - ballRadius))  -- logic for the top/bottom of the court 
+        ballX = math.max(courtX + ballRadius, math.min(ballX, courtX + courtWidth - ballRadius)) -- logic for the left/right of the court
+        ballY = math.max(courtY + ballRadius, math.min(ballY, courtY + courtHeight - ballRadius))  -- logic for the top/bottom of the court
 
-        -- player one and two movement
+        -- Logic for collision with Player One's bat
+        if ballX - ballRadius <= playerOneBatX + batSizeWidth and ballX + ballRadius >= playerOneBatX then
+            if ballY >= playerOneBaty and ballY <= playerOneBaty + batSizeHeight then
+                ballX = playerOneBatX + batSizeWidth + ballRadius  -- Set ball just outside the bat
+                ballSpeedX, ballSpeedY = changeBallSpeed(ballSpeedX, ballSpeedY, 1)  -- Change speed and direction
+            end
+        end
+
+        -- Logic for collision with Player Two's bat
+        if ballX + ballRadius >= playerTwoBatX and ballX - ballRadius <= playerTwoBatX + batSizeWidth then
+            if ballY >= playerTwoBaty and ballY <= playerTwoBaty + batSizeHeight then
+                ballX = playerTwoBatX - ballRadius  -- Set ball just outside the bat
+                ballSpeedX, ballSpeedY = changeBallSpeed(ballSpeedX, ballSpeedY, 2)  -- Change speed and direction
+            end
+        end
+
+        -- Player movement
         if love.keyboard.isDown("w") then
             playerOneBaty = playerOneBaty - 10
         end
@@ -132,13 +180,12 @@ function love.update(dt)
             playerTwoBatX = playerTwoBatX + 10
         end
 
-        -- logic to make sure that the player bats cant leave the area of play.
+        -- Prevent bats from leaving the court area
         playerOneBatX = math.max(courtX, math.min(playerOneBatX, courtX + courtWidth - batSizeWidth))
         playerTwoBatX = math.max(courtX, math.min(playerTwoBatX, courtX + courtWidth - batSizeWidth))
 
         playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
         playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
-
     end
 end
 
@@ -201,7 +248,6 @@ function love.draw()
             cursor_y = cursor_y + (BUTTON_HEIGHT + margin)
         end
 
-
     elseif gameState == "game" then
         love.graphics.setColor(1, 1, 1)
 
@@ -223,6 +269,8 @@ function love.draw()
             love.graphics.printf("Game Over!", 0, love.graphics.getHeight() / 2 - 50, love.graphics.getWidth(), "center")
         end
 
+        love.graphics.print("Horizontal / BallX Speed: " .. ballSpeedX,250)
+        love.graphics.print("vertical / Bally Speed: " .. ballSpeedY,1000)
     end
 end
 

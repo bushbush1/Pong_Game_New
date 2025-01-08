@@ -1,6 +1,6 @@
 -- conf.lua is loaded before the game is started
 function love.conf(t)
-    t.console = false
+    t.console = true
     t.window.title = "Pong - 2D Game"
 
     -- Using 720p (for now)
