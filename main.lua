@@ -5,6 +5,8 @@ playerTwosTurn = false
 -- Initialize sounds
 menuSound = love.audio.newSource("/retro-gaming-271301.mp3", "stream")
 gameSound = love.audio.newSource("/gaming-music-8-bit-console-play-background-intro-theme-278382.mp3", "stream")
+settingsSound = love.audio.newSource("/settingsAudio.mp3", "stream")
+byyyyye = love.audio.newSource("exit.mp3", "stream")
 
 -- Ball position and size
 local ballX = math.min(50, love.graphics.getWidth() - 50)
@@ -24,8 +26,8 @@ maxBallSpeed = 500
 -- Game area size
 local courtX = 10
 local courtY = 30
-local courtWidth = (1280 - 30) -- Corrected: Horizontal dimension
-local courtHeight = (720 - 30) -- Corrected: Vertical dimension
+local courtWidth = (1280 - 30)
+local courtHeight = (720 - 30)
 
 -- Mid court line / halfway line
 local midCourtLine = (courtWidth / 2) 
@@ -45,7 +47,7 @@ BUTTON_HEIGHT = 64
 local buttons = {}
 local gameState = "menu" -- Values: "menu", "game"
 
-function newButton(text, fn)
+function newMenuButton(text, fn)
     return {
         text = text,
         fn = fn,
@@ -62,7 +64,7 @@ function love.load()
     ballSpeedX = 200
     ballSpeedY = 200
 
-    table.insert(buttons, newButton(
+    table.insert(buttons, newMenuButton(
         "start game",
         function()
             print("Starting game")
@@ -71,22 +73,28 @@ function love.load()
             love.audio.play(gameSound)
         end))
 
-    table.insert(buttons, newButton(
+    table.insert(buttons, newMenuButton(
         "Load game",
         function()
             print("Loading game")
         end))
 
-    table.insert(buttons, newButton(
+    table.insert(buttons, newMenuButton(
         "Settings",
         function()
             print("going to settings menu")
+            love.audio.stop()
+            love.audio.play(settingsSound)
+            gameState = settings
         end))
 
-    table.insert(buttons, newButton(
+    table.insert(buttons, newMenuButton(
         "exit",
         function()
-            love.event.quit(0)
+            print("exiting the game")
+            love.audio.stop()
+            love.audio.play(byyyyye)
+            love.event.quit(10)
         end))
 end
 
@@ -113,6 +121,12 @@ function changeBallSpeed(ballSpeedX, ballSpeedY, playerID)
         ballSpeedX = -maxBallSpeed
     end
 
+    if ballSpeedY > maxBallSpeed then
+        ballSpeedY = maxBallSpeed
+    elseif ballSpeedY < -maxBallSpeed then
+        ballSpeedY = -maxBallSpeed
+    end
+
     return ballSpeedX, ballSpeedY
 end
 
@@ -127,9 +141,17 @@ function love.update(dt)
         ballX = ballX + ballSpeedX * dt
         ballY = ballY + ballSpeedY * dt
 
-        -- logic to make sure the ball can't leave the area of play
-        ballX = math.max(courtX + ballRadius, math.min(ballX, courtX + courtWidth - ballRadius)) -- logic for the left/right of the court
-        ballY = math.max(courtY + ballRadius, math.min(ballY, courtY + courtHeight - ballRadius))  -- logic for the top/bottom of the court
+        -- Ensure the ball doesn't go out of bounds horizontally (left/right)
+        ballX = math.max(courtX + ballRadius, math.min(ballX, courtX + courtWidth - ballRadius))
+
+        -- Ball boundary check for the top and bottom of the court (vertical boundaries)
+        if ballY - ballRadius <= courtY then
+            ballY = courtY + ballRadius  -- Place the ball just at the top boundary
+            ballSpeedY = -ballSpeedY  -- Reverse Y speed to make the ball bounce downward
+        elseif ballY + ballRadius >= courtY + courtHeight then
+            ballY = courtY + courtHeight - ballRadius  -- Place the ball just at the bottom boundary
+            ballSpeedY = -ballSpeedY  -- Reverse Y speed to make the ball bounce upward
+        end
 
         -- Logic for collision with Player One's bat
         if ballX - ballRadius <= playerOneBatX + batSizeWidth and ballX + ballRadius >= playerOneBatX then
@@ -147,35 +169,28 @@ function love.update(dt)
             end
         end
 
-        -- Player movement
+        -- Player movement controls
         if love.keyboard.isDown("w") then
             playerOneBaty = playerOneBaty - 10
         end
-
         if love.keyboard.isDown("s") then
             playerOneBaty = playerOneBaty + 10
         end
-
         if love.keyboard.isDown("d") then
             playerOneBatX = playerOneBatX + 10
         end
-
         if love.keyboard.isDown("a") then
             playerOneBatX = playerOneBatX - 10
         end
-
         if love.keyboard.isDown("up") then
             playerTwoBaty = playerTwoBaty - 10
         end
-
         if love.keyboard.isDown("down") then
             playerTwoBaty = playerTwoBaty + 10
         end
-
         if love.keyboard.isDown("left") then
             playerTwoBatX = playerTwoBatX - 10
         end
-
         if love.keyboard.isDown("right") then
             playerTwoBatX = playerTwoBatX + 10
         end
@@ -183,7 +198,6 @@ function love.update(dt)
         -- Prevent bats from leaving the court area
         playerOneBatX = math.max(courtX, math.min(playerOneBatX, courtX + courtWidth - batSizeWidth))
         playerTwoBatX = math.max(courtX, math.min(playerTwoBatX, courtX + courtWidth - batSizeWidth))
-
         playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
         playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
     end
