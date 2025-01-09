@@ -30,11 +30,11 @@ local courtWidth = (1280 - 30)
 local courtHeight = (720 - 30)
 
 -- Mid court line / halfway line
-local midCourtLine = (courtWidth / 2) 
+local midCourtLine = (courtWidth / 2)
 
 -- Player bat position and size
 local playerOneBatX, playerOneBaty = 10, 250
-local playerTwoBatX, playerTwoBaty = courtWidth, 250 
+local playerTwoBatX, playerTwoBaty = courtWidth, 250
 local batSizeWidth = 10
 local batSizeHeight = 50
 
@@ -102,7 +102,7 @@ end
 function changeBallSpeed(ballSpeedX, ballSpeedY, playerID)
     -- Reverse the X speed (bounce effect)
     ballSpeedX = -ballSpeedX
-    ballSpeedY = - ballSpeedY
+    ballSpeedY = -ballSpeedY
 
     -- Apply different speed modifiers based on player
     if playerID == 1 then
@@ -142,7 +142,15 @@ function love.update(dt)
         ballY = ballY + ballSpeedY * dt
 
         -- Ensure the ball doesn't go out of bounds horizontally (left/right)
-        ballX = math.max(courtX + ballRadius, math.min(ballX, courtX + courtWidth - ballRadius))
+        -- Ball leaving the left side (Player 2 scores)
+        if ballX - ballRadius <= courtX then
+            playerTwoScore = playerTwoScore + 1  -- Player Two scores
+            resetBall(2)  -- Reset the ball after Player Two scores
+        -- Ball leaving the right side (Player 1 scores)
+        elseif ballX + ballRadius >= courtX + courtWidth then
+            playerOneScore = playerOneScore + 1  -- Player One scores
+            resetBall(1)  -- Reset the ball after Player One scores
+        end
 
         -- Ball boundary check for the top and bottom of the court (vertical boundaries)
         if ballY - ballRadius <= courtY then
@@ -200,6 +208,21 @@ function love.update(dt)
         playerTwoBatX = math.max(courtX, math.min(playerTwoBatX, courtX + courtWidth - batSizeWidth))
         playerOneBaty = math.max(courtY, math.min(playerOneBaty, courtY + courtHeight - batSizeHeight))
         playerTwoBaty = math.max(courtY, math.min(playerTwoBaty, courtY + courtHeight - batSizeHeight))
+    end
+end
+
+-- Function to reset the ball after scoring
+function resetBall(winner)
+    -- Reset the ball to the center
+    ballX = courtX + courtWidth / 2
+    ballY = courtY + courtHeight / 2
+    -- Randomize the ball's vertical direction
+    ballSpeedY = math.random(-200, 200)
+    -- Ensure Player 1 or Player 2 gets the ball (change horizontal direction)
+    if winner == 1 then
+        ballSpeedX = 200  -- Player 1 serves the ball
+    else
+        ballSpeedX = -200  -- Player 2 serves the ball
     end
 end
 
@@ -283,8 +306,8 @@ function love.draw()
             love.graphics.printf("Game Over!", 0, love.graphics.getHeight() / 2 - 50, love.graphics.getWidth(), "center")
         end
 
-        love.graphics.print("Horizontal / BallX Speed: " .. ballSpeedX,250)
-        love.graphics.print("vertical / Bally Speed: " .. ballSpeedY,1000)
+        love.graphics.print("Horizontal / BallX Speed: " .. ballSpeedX, 250)
+        love.graphics.print("vertical / Bally Speed: " .. ballSpeedY, 1000)
     end
 end
 
