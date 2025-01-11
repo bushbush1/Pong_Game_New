@@ -296,8 +296,12 @@ function love.draw()
     elseif gameState == "game" then
         love.graphics.setColor(1, 1, 1)
 
+        love.graphics.setColor(1, 0, 0)
         love.graphics.rectangle("fill", playerOneBatX, playerOneBaty, batSizeWidth, batSizeHeight)
+        love.graphics.setColor(0, 1, 0)
         love.graphics.rectangle("fill", playerTwoBatX, playerTwoBaty, batSizeWidth, batSizeHeight)
+
+        love.graphics.setColor(1, 1, 1)
         love.graphics.circle("fill", ballX, ballY, ballRadius)
 
         love.graphics.rectangle("line", courtX, courtY, courtWidth, courtHeight)
