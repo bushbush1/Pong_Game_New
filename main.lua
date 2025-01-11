@@ -1,6 +1,6 @@
 -- Initializing which player's turn it is for when the ball hits the bat to determine who gets the point
-playOnesTurn = true
-playerTwosTurn = false
+playerOneMoving = false
+playerTwoMoving = false
 
 -- Initialize sounds
 menuSound = love.audio.newSource("/retro-gaming-271301.mp3", "stream")
@@ -180,27 +180,35 @@ function love.update(dt)
         -- Player movement controls
         if love.keyboard.isDown("w") then
             playerOneBaty = playerOneBaty - 10
+            playerOneMoving = true
         end
         if love.keyboard.isDown("s") then
             playerOneBaty = playerOneBaty + 10
+            playerOneMoving = true
         end
         if love.keyboard.isDown("d") then
             playerOneBatX = playerOneBatX + 10
+            playerOneMoving = true
         end
         if love.keyboard.isDown("a") then
             playerOneBatX = playerOneBatX - 10
+            playerOneMoving = true
         end
         if love.keyboard.isDown("up") then
             playerTwoBaty = playerTwoBaty - 10
+            playerTwoMoving = true
         end
         if love.keyboard.isDown("down") then
             playerTwoBaty = playerTwoBaty + 10
+            playerTwoMoving = true
         end
         if love.keyboard.isDown("left") then
             playerTwoBatX = playerTwoBatX - 10
+            playerTwoMoving = true
         end
         if love.keyboard.isDown("right") then
             playerTwoBatX = playerTwoBatX + 10
+            playerTwoMoving = true
         end
 
         -- Prevent bats from leaving the court area
